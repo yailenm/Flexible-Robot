@@ -1,0 +1,14 @@
+ACTIONS = {getBasePlate, setBasePlate, getSpring1, setSpring1, getSpring2, setSpring2, getPCB, setPCB, getLid, setLid, clickLid, getButton, setButton, checkSwitch, removeSwitch};
+RESOURCES = {robotL, robotR, operator};
+PRODUCTS = [1 2 ];
+actionStartTime = [0, 15, 0, 40, 35, 75, 164, 180, 210, 225, 286, 265, 295, 337, 367, 60, 75, 105, 145, 140, 180, 244, 260, 295, 319, 337, 347, 377, 407, 437];
+actionEndTime = [15, 38, 40, 75, 75, 105, 180, 206, 225, 260, 295, 295, 325, 367, 377, 75, 98, 145, 180, 180, 210, 260, 286, 319, 337, 352, 377, 407, 437, 447];
+actionDuration = [15, 23, 40, 35, 40, 30, 16, 26, 15, 35, 9, 30, 30, 30, 10, 15, 23, 40, 35, 40, 30, 16, 26, 24, 18, 15, 30, 30, 30, 10];
+selectedResource = [3, 3, 2, 2, 1, 1, 3, 3, 2, 2, 3, 1, 1, 3, 3, 3, 3, 1, 1, 2, 2, 3, 3, 3, 3, 2, 1, 1, 3, 3];
+resourceStartTimes = [35, 0, 0];
+resourceEndTimes = [407, 352, 447];
+resourceDurations = [372, 352, 447];
+obj = 447;
+softConstr = ;
+cycleTime = 447;
+maxDuration = ;
