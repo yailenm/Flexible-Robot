@@ -1,7 +1,10 @@
 package Logic;
 //import java.awt.JobAttributes;
 import java.io.*;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.Date;
@@ -298,7 +301,21 @@ public class QLearning {
 		PrintWriter pw;
 		//String PathSol = "Solutions/Mine/Test.txt";
 		String PathSol = "Schedule.txt";
-		File SolutionFile=new File(PathSol);
+	    
+	    Calendar cal = Calendar.getInstance();
+        cal.setTime(Date.from(Instant.now()));
+        
+        String result = String.format(
+                "file-%1$tY-%1$tm-%1$td-%1$tk-%1$tS-%1$tp.txt", cal);
+        
+        String result2 = String.format(
+                "%1$tY-%1$tm-%1$td.txt", cal);
+//	    
+//	    System.out.println(result);
+//	    System.out.println(result2);
+		
+		String PathTest = "Schedule__" + result2;
+		File SolutionFile=new File(PathTest);
 		try {
 			pw = new PrintWriter(SolutionFile);
 			//pw.println(instance.getName());
@@ -1042,7 +1059,17 @@ public class QLearning {
 //		PrintQValues();
 		
 //		CalculateJobsFullTimes();
-		file_saved = "Solutions/Mine/Solution-" + filename + ".txt";
+
+//		file_saved = "Solutions/Mine/Solution-" + filename + ".txt";
+		
+		Calendar cal = Calendar.getInstance();
+        cal.setTime(Date.from(Instant.now()));
+        
+        String dateNow = String.format(
+                "%1$tY-%1$tm-%1$td.txt", cal);
+		
+		file_saved = "Solution__" + dateNow;
+		
 		SearchRoutesVersion2();
 		
 		for (int n = 0; n < this.iterations; n++){
