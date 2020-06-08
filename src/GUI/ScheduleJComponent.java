@@ -63,6 +63,7 @@ public class ScheduleJComponent extends JComponent{
     boolean fix = false;//if fix is pressed
     Boton operationFix;//button fix
     int newTimeOperationFix = -1;// new time of the operation fixed
+   // int oldTimeOperationFix = -1;// old time of the operation fixed
     int timeHorizon;
     
     public ScheduleJComponent(Schedule schedule, Instance instance) {
@@ -351,8 +352,11 @@ public class ScheduleJComponent extends JComponent{
 		timeHorizon = schedule.getMakespan();
 		repaint();
 	}
+    
        
-    public class Boton extends JButton implements ActionListener, MouseListener {
+    
+
+	public class Boton extends JButton implements ActionListener, MouseListener {
 		   /**
 		 * 
 		 */
@@ -375,7 +379,13 @@ public class ScheduleJComponent extends JComponent{
 		
 			
 			public Boton (String text, Color fillColor, Rectangle r, int operation, int job, int positionRec,int start_time, int f_time, int machine,OperationGUI op, boolean borde) {
-				String s = text.substring(0, 6);
+				String s = ""+text.charAt(0);
+				for (int i = 1; i < text.length(); i++) {
+					if(Character.isUpperCase(text.charAt(i)))
+						s +=text.charAt(i);
+					if(Character.isDigit(text.charAt(i)))
+						s +=text.charAt(i);
+				}
 				//super(s);
 				this.setText(s);
 				this.text = text;

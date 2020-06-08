@@ -1,7 +1,6 @@
 package Logic;
 //import java.awt.JobAttributes;
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -18,6 +17,7 @@ import GUI.Pair;
 import GUI.Schedule;
 import GUI.ScheduleFrame;
 
+
 public class QLearning {
 
 	private double LearningRate;
@@ -26,8 +26,8 @@ public class QLearning {
 	private double epsilon;
 	private String filename;
 	private int njobs, nmachines, navg_op;
-	private Job[] Jobs;
-	private Zone[] zone;//new
+	public Job[] Jobs;
+	public Zone[] zone;//new
 	int countZones;//new
 	public Machine[] Machines;
 	private int Cmax;
@@ -59,6 +59,8 @@ public class QLearning {
 		SolutionFileQV=new File("Solutions/Mine/QV-" + filename + ".txt");
 		pwQV = new PrintWriter(SolutionFileQV);
 	}
+	
+	
 	
 	public QLearning(double LearningRate){
 		this.LearningRate = LearningRate;
@@ -284,6 +286,7 @@ public class QLearning {
 					pw.write(Jobs[m].operations.get(n).initial_time +"\t");
 					pw.write(Jobs[m].operations.get(n).end_time +"\t");
 					pw.write(Jobs[m].operations.get(n).back2back_before +"\t");//operation back to back before
+					pw.write(Jobs[m].operations.get(n).operation_precedent +"\t");//operation precedent
 					pw.write(0 +"\n");
 					pw.flush();
 				}
@@ -301,8 +304,8 @@ public class QLearning {
 		PrintWriter pw;
 		//String PathSol = "Solutions/Mine/Test.txt";
 		String PathSol = "Schedule.txt";
-	    
-	    Calendar cal = Calendar.getInstance();
+		
+		Calendar cal = Calendar.getInstance();
         cal.setTime(Date.from(Instant.now()));
         
         String result = String.format(
@@ -310,12 +313,14 @@ public class QLearning {
         
         String result2 = String.format(
                 "%1$tY-%1$tm-%1$td.txt", cal);
-//	    
-//	    System.out.println(result);
-//	    System.out.println(result2);
 		
-		String PathTest = "Schedule__" + result2;
+		
+        String PathTest = "Schedule__" + result2;
 		File SolutionFile=new File(PathTest);
+		
+		
+//		File SolutionFile=new File(PathSol);
+		
 		try {
 			pw = new PrintWriter(SolutionFile);
 			//pw.println(instance.getName());
@@ -755,6 +760,9 @@ public class QLearning {
 				((M.Op_executed_Optim.getFirst().initial_time >= time_slot) && (M.Op_executed_Optim.getFirst().initial_time >= min_posible_start + time_slot))){
 			resultado[0] = 0;
 			resultado[1] = 0;
+			if (M.timeReSchedule != -1) {
+				resultado[1] = M.timeReSchedule;
+			}
 			located = true;
 		}
 		else{
@@ -795,26 +803,12 @@ public class QLearning {
 	
 	
 	public void GetBackwardForward(){
-		
+		System.out.println("backward forward ");
 		//Finding slots...
 		for (int t=0; t < OrderedList.size(); t++){
 			//int min_initial_j = 0;
 			int min_initial_j = Jobs[OrderedList.get(t).GetJob()].temp_endtime;
-		//	boolean zone_occupied = false;
-		//	ArrayList<Integer> arrayZone = new ArrayList<Integer>();
-			//int timeZone = 0;
-			//zone
-		/*	String array = ""+OrderedList.get(t).GetJob()+ OrderedList.get(t).GetID()+(OrderedList.get(t).machines[0]-1);			
-			String finalArray = ""+OrderedList.get(t).GetJob()+ OrderedList.get(t).GetID()+(OrderedList.get(t).machines[0]-1);
-			//buscar la zona					
-			for (int i = 0; i < zone.length; i++){
-				if (zone[i].job_operation_occupied.get(array).equals(true)){				
-					if (min_initial_j < zone[i].time) 
-						min_initial_j = zone[i].time;					
-				}
-			}*/
-			
-			//int min_initial_j = Jobs[OrderedList.get(t).GetJob()].temp_endtime;
+		
 			//CheckAvailability on the first machine, and this gives a possible initial time on the machine
 			int[] data = CheckAvailability(Machines[OrderedList.get(t).machines[0]-1], OrderedList.get(t).times[0], min_initial_j);
 			int index = data[0]; int min_initial_m = data[1];
@@ -823,20 +817,9 @@ public class QLearning {
 			int min_end = initial + OrderedList.get(t).times[0];
 			OrderedList.get(t).temp_index = 0;
 			OrderedList.get(t).index_Ma = 0;
+			System.out.println("job "+OrderedList.get(t).GetJob()+" op "+OrderedList.get(t).GetID()+" name "+OrderedList.get(t).name);
 			
-			
-			for (int p=1; p < OrderedList.get(t).machines.length; p++){
-			//	array = ""+OrderedList.get(t).GetJob()+ OrderedList.get(t).GetID()+(OrderedList.get(t).machines[p]-1);			
-				//buscar la zona y ver precedencia		
-				//arrayZone.clear();
-			/*	for (int i = 0; i < zone.length; i++){
-					if (zone[i].job_operation_occupied.get(array).equals(true)){
-						if (min_initial_j < zone[i].time) {
-							min_initial_j = zone[i].time;
-						}
-						//System.out.println("ocupa la zona "+(i+1)+" time zone "+zone[i].time+" nuevo time "+timeZone);
-					}
-				}*/
+			for (int p=1; p < OrderedList.get(t).machines.length; p++){		
 				data = CheckAvailability(Machines[OrderedList.get(t).machines[p]-1], OrderedList.get(t).times[p], min_initial_j);
 				min_initial_m = data[1];
 				initial = (min_initial_j > min_initial_m) ? min_initial_j : min_initial_m;
@@ -855,7 +838,7 @@ public class QLearning {
 			OrderedList.get(t).end_time = min_end;
 			OrderedList.get(t).M = Machines[OrderedList.get(t).machines[OrderedList.get(t).temp_index]-1];
 			OrderedList.get(t).Ma = OrderedList.get(t).machines[OrderedList.get(t).temp_index]-1;
-			
+			System.out.println("min_initial "+min_initial+" min_end "+min_end+" index_Ma "+ OrderedList.get(t).index_Ma+" maq "+Machines[OrderedList.get(t).Ma].GetID()+" Ma "+OrderedList.get(t).Ma+" index "+index);
 			//insertar con posicion donde va...
 			if (index==0)
 				Machines[OrderedList.get(t).machines[OrderedList.get(t).temp_index]-1].Op_executed_Optim.addFirst(OrderedList.get(t));
@@ -898,23 +881,27 @@ public class QLearning {
 		GetBackwardForward();
 		ClearTimesOpt();
 		Order();
-		GetBackwardForward2();
+		GetBackwardForward2(false);
 		/*for (int j=0; j < njobs; j++)
 			Jobs[j].j_end_time = Jobs[j].operations.get(Jobs[j].operations.size()-1).end_time;*/
 		//ComputeMakespan
 	}
 	
 	
-	private void GetBackwardForward2() {
+	private void GetBackwardForward2(boolean reschedule) {
 		// TODO Auto-generated method stub
 		//Finding slots...
 	//	System.out.println("________________");
+		System.out.println("backward forward 2 ");
 				for (int t=0; t < OrderedList.size(); t++){
 					int min_initial_j=0,min_end = 0,min_initial=0,index  =0;
+					if (reschedule) {
+						min_initial_j = Jobs[OrderedList.get(t).GetJob()].temp_endtime;
+					}
 					//ArrayList<Integer> arrayZone = new ArrayList<Integer>();				
 					String array = "";
 					String finalArray = "";
-					//System.out.println("job "+OrderedList.get(t).GetJob()+" op "+OrderedList.get(t).GetID());
+					System.out.println("job "+OrderedList.get(t).GetJob()+" op "+OrderedList.get(t).GetID()+" name "+OrderedList.get(t).name);
 					if (OrderedList.get(t).back2back_before>-1) {						
 						int beforeMachine = Jobs[OrderedList.get(t).GetJob()].operations.get(OrderedList.get(t).back2back_before).Ma;
 						int indexTime =0;
@@ -941,6 +928,8 @@ public class QLearning {
 						OrderedList.get(t).index_Ma = indexTime;
 						min_end = initial + OrderedList.get(t).times[OrderedList.get(t).index_Ma];
 						OrderedList.get(t).temp_index = OrderedList.get(t).index_Ma;
+						
+						System.out.println(" back: min_initial_j "+ min_initial_j+" min initial machine "+min_initial_m);
 					}else{
 						array = ""+OrderedList.get(t).GetJob()+ OrderedList.get(t).GetID()+(OrderedList.get(t).machines[0]-1);			
 						finalArray = ""+OrderedList.get(t).GetJob()+ OrderedList.get(t).GetID()+(OrderedList.get(t).machines[0]-1);
@@ -960,10 +949,13 @@ public class QLearning {
 						min_end = initial + OrderedList.get(t).times[0];
 						OrderedList.get(t).temp_index = 0;
 						OrderedList.get(t).index_Ma = 0;					
-						
+						System.out.println(" first machine: min_initial_j "+ min_initial_j+" min initial machine "+min_initial_m+" machine "+(OrderedList.get(t).machines[OrderedList.get(t).temp_index]-1));
 						for (int p=1; p < OrderedList.get(t).machines.length; p++){
 							array = ""+OrderedList.get(t).GetJob()+ OrderedList.get(t).GetID()+(OrderedList.get(t).machines[p]-1);			
 							min_initial_j = 0;
+							if (reschedule) {
+								min_initial_j = Jobs[OrderedList.get(t).GetJob()].temp_endtime;
+							}
 							//search zone						
 							for (int i = 0; i < zone.length; i++){
 								if (zone[i].job_operation_occupied.get(array).equals(true)){								
@@ -971,6 +963,7 @@ public class QLearning {
 										min_initial_j = zone[i].time;
 								}
 							}
+							
 							data = CheckAvailability(Machines[OrderedList.get(t).machines[p]-1], OrderedList.get(t).times[p], min_initial_j);
 							min_initial_m = data[1];
 							initial = (min_initial_j > min_initial_m) ? min_initial_j : min_initial_m;
@@ -982,6 +975,7 @@ public class QLearning {
 								OrderedList.get(t).index_Ma = p;
 								finalArray = ""+OrderedList.get(t).GetJob()+ OrderedList.get(t).GetID()+(OrderedList.get(t).machines[p]-1);
 							}
+							System.out.println(" others machine : min_initial_j "+ min_initial_j+" min initial machine "+min_initial_m+" machine "+(OrderedList.get(t).machines[OrderedList.get(t).temp_index]-1));
 						}
 						//System.out.println("min_initial "+min_initial+" min_end "+min_end+" index_Ma "+ OrderedList.get(t).index_Ma+" maq "+Machines[OrderedList.get(t).Ma].GetID()+" Ma "+OrderedList.get(t).Ma+" index "+index);
 					}
@@ -994,7 +988,7 @@ public class QLearning {
 					OrderedList.get(t).Ma = OrderedList.get(t).machines[OrderedList.get(t).temp_index]-1;
 					OrderedList.get(t).proc_time = OrderedList.get(t).times[OrderedList.get(t).index_Ma];
 				//	System.out.println("Job "+ OrderedList.get(t).GetJob()+" op "+ OrderedList.get(t).GetID()+" min_initial "+min_initial+" min_end "+min_end+" index_Ma "+ OrderedList.get(t).index_Ma+" maq "+Machines[OrderedList.get(t).Ma].GetID()+" Ma "+OrderedList.get(t).Ma+" time "+OrderedList.get(t).times[OrderedList.get(t).index_Ma]);
-					//System.out.println("min_initial "+OrderedList.get(t).initial_time+" min_end "+OrderedList.get(t).end_time+" index_Ma "+ OrderedList.get(t).index_Ma+" maq "+Machines[OrderedList.get(t).Ma].GetID()+" Ma "+OrderedList.get(t).Ma+" index "+index);
+					System.out.println("min_initial "+OrderedList.get(t).initial_time+" min_end "+OrderedList.get(t).end_time+" index_Ma "+ OrderedList.get(t).index_Ma+" maq "+Machines[OrderedList.get(t).Ma].GetID()+" Ma "+OrderedList.get(t).Ma+" index "+index);
 					//insertar con posicion donde va...
 					if (index==0)
 						Machines[OrderedList.get(t).machines[OrderedList.get(t).temp_index]-1].Op_executed_Optim.addFirst(OrderedList.get(t));
@@ -1059,8 +1053,8 @@ public class QLearning {
 //		PrintQValues();
 		
 //		CalculateJobsFullTimes();
-
-//		file_saved = "Solutions/Mine/Solution-" + filename + ".txt";
+	
+		//file_saved = "Solutions/Mine/Solution-" + filename + ".txt";
 		
 		Calendar cal = Calendar.getInstance();
         cal.setTime(Date.from(Instant.now()));
@@ -1150,7 +1144,7 @@ public class QLearning {
 		try {
 			//System.out.println(file_saved.toString());
 			instance = new Instance("Schedule", 55, file_saved,nmachines);
-			Pair<Instance,Schedule> result = GUI.Test.loadSchedule(instance);
+			Pair<Instance,Schedule> result = GUI.Test.loadSchedule(instance,this);
 			List<Schedule> s = new ArrayList<Schedule>(); 
 			ArrayList<OperationAllocation> newAllocs = new ArrayList<OperationAllocation>();
 			for (int i=0; i < result.getSecond().getAllocations().size(); i++) {
@@ -1170,7 +1164,7 @@ public class QLearning {
 			new File(file_saved);
 			
 			//System.out.println("The fixBton size is: "+fixBoton.size());
-			ScheduleFrame sf = new ScheduleFrame(result.getFirst(), result.getSecond()," Optimized using Q-Learning");
+			ScheduleFrame sf = new ScheduleFrame(result.getFirst(), result.getSecond()," Optimized using Q-Learning",this);
 			//sf.saveSchedule(filename);
 			sf.setVisible(true);
 		} catch (IOException e) {
@@ -1187,6 +1181,175 @@ public class QLearning {
 		System.out.println((fin - initial) / 1000+"."+(fin - initial) % 1000+" Seconds...");
 		System.out.println("----------------");
 		
+	}
+	
+	//Re-schedule
+	
+	public void ExecuteReSchedule() throws FileNotFoundException, CloneNotSupportedException{
+		Date date = new Date();
+		long initial = date.getTime();
+		int R;
+		
+		file_saved = "Solutions/Mine/Solution-" + filename + ".txt";
+		//SearchRoutesVersion2();
+		
+		for (int n = 0; n < this.iterations; n++){
+			System.out.println("ooooo");	
+			R=0;
+			RestartTimesForOnceReSchedule();
+			ExecuteModeOptimizationReSchedule();
+			RestartTimesForOnceReSchedule(); 
+			
+			initializeReSchedule(); //Send job to the first machine
+		
+			pwQV.println("Iteration " + n);
+			ProcessNonDelay(LearningRate, DiscountFactor, n);
+			Cmax = CalculateCmax(Jobs);
+			
+			pwQV.println("makespan-iteration " + n + ": " + Cmax);
+			pwQV.println();
+			pwQV.flush();
+					
+			//Variante 2 ModeOptimization
+			if (n==0) { 
+				BestSol = Cmax; 
+				SavetoFile(file_saved, BestSol);
+			}
+			if (Cmax < BestSol){
+				System.out.println("encontre mejor sol");
+				BestSol = Cmax;
+				SavetoFile(file_saved, BestSol);
+				R=1;
+					//UpdateQValuesProcedure(alpha, gamma, R);
+			}else{
+				if(Cmax==BestSol)
+					R=1;
+				else
+					R=0;
+			}
+			 UpdateQValuesProcedure(LearningRate, DiscountFactor, R);
+			 ClearTimesOptReSchedule();		
+			
+			 System.out.println("Time cycle "+Cmax);
+			//RestartTimesForOnce();
+		}
+		
+		//borrar timeReSchedule en machine, timeReScheduleZone in zone
+		System.out.println("The makespan is: "+BestSol);		
+				
+		Instance instance;
+		try {
+			//System.out.println(file_saved.toString());
+			instance = new Instance("Schedule", 55, file_saved,nmachines);
+			Pair<Instance,Schedule> result = GUI.Test.loadSchedule(instance,this);
+			List<Schedule> s = new ArrayList<Schedule>(); 
+			ArrayList<OperationAllocation> newAllocs = new ArrayList<OperationAllocation>();
+			for (int i=0; i < result.getSecond().getAllocations().size(); i++) {
+				OperationGUI operation = result.getSecond().getAllocations().get(i).getOperation();
+				MachineGUI machine = result.getSecond().getAllocations().get(i).getMachine();
+				int startTime = result.getSecond().getAllocations().get(i).getStartTime();
+				int endTime = result.getSecond().getAllocations().get(i).getEndTime();
+				boolean border = result.getSecond().getAllocations().get(i).getBorder();
+				
+				newAllocs.add(new OperationAllocation(operation, machine, startTime, endTime,border));
+				
+			}
+			
+			Schedule otro = new Schedule (newAllocs);	
+
+			s.add(otro);
+			new File(file_saved);
+			
+			//System.out.println("The fixBton size is: "+fixBoton.size());
+			ScheduleFrame sf = new ScheduleFrame(result.getFirst(), result.getSecond()," Optimized using Q-Learning",this);
+			//sf.saveSchedule(filename);
+			sf.setVisible(true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		// end new add
+		
+		Date date1 = new Date();
+		long fin = date1.getTime();
+		System.out.println((fin-initial)+" Milliseconds...");
+		System.out.println((fin - initial) / 1000+"."+(fin - initial) % 1000+" Seconds...");
+		System.out.println("----------------");
+		
+	}
+	
+	//initialization of all attributes of the operations with time bigger than the fix one  
+	public void RestartTimesForOnceReSchedule(){
+		//restart machines' times
+		for (int x=0; x<nmachines; x++){
+			Machines[x].time = Machines[x].timeReSchedule;
+			Machines[x].TempOrderedList.clear();//look
+			//Machines[x].Op_assigned.clear();
+			Machines[x].minInitialM = Machines[x].timeReSchedule;
+		}
+		
+		//restart jobs' times and each job restarts its operations' times
+		for (int j=0; j<njobs; j++){
+		//	Jobs[j].aux_end = 0;
+			//Jobs[j].j_end_time =0;
+			Jobs[j].finished =  false;
+			/*for (int o=0; o<Jobs[j].operations.size(); o++){
+				Jobs[j].operations.get(o).initial_time = 0;
+				Jobs[j].operations.get(o).end_time = 0;
+				Jobs[j].operations.get(o).temp_end = 0;
+			//	Jobs[j].operations[o].proc_time = 0;
+			}*/
+				
+		}
+		for (int i = 0; i < zone.length; i++) {
+			zone[i].time = zone[i].timeReScheduleZone;
+		}
+		//FullOperationList.clear();
+	}	
+	
+	public void initializeReSchedule(){
+		
+		for (int j=0; j < njobs; j++) {			
+			Jobs[j].startReChedule(Machines);					
+		}
+	}
+	
+	public void ExecuteModeOptimizationReSchedule(){
+		//order the operations by end-time (the highest go first)
+		OrderReSchedule();
+		GetBackwardForward();
+		ClearTimesOptReSchedule();
+		OrderReSchedule();
+		GetBackwardForward2(true);
+		/*for (int j=0; j < njobs; j++)
+			Jobs[j].j_end_time = Jobs[j].operations.get(Jobs[j].operations.size()-1).end_time;*/
+		//ComputeMakespan
+	}
+	
+	public void OrderReSchedule(){
+		for(int x=0; x < njobs; x++)
+			for (int y=Jobs[x].opStart; y < Jobs[x].operations.size(); y++)
+				Locate_Op_OrderedList(Jobs[x].operations.get(y));
+	}
+	
+	public void ClearTimesOptReSchedule(){		
+		for (int j=0; j < njobs; j++)
+			Jobs[j].temp_endtime=Jobs[j].operations.get(Jobs[j].opStart-1).end_time;
+		
+		OrderedList.clear();
+		
+		for (int m=0; m < nmachines; m++)
+			Machines[m].Op_executed_Optim.clear();
+		
+		for(int m=0; m < zone.length; m++)
+			zone[m].time = zone[m].timeReScheduleZone;
+		
+		for(int m=0; m < Machines.length; m++) {
+			Machines[m].time = Machines[m].timeReSchedule;
+			System.out.println("machine "+m+" time "+Machines[m].timeReSchedule);
+		}
 	}
 		
 }

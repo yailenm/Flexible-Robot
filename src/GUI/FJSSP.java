@@ -31,7 +31,7 @@ public class FJSSP extends JFrame {
 	private JFileChooser FileChooser = new JFileChooser(System.getProperty("user.dir"));  //  @jve:decl-index=0:visual-constraint="649,12"
 	private JFileChooser FileChooserLoad = new JFileChooser(System.getProperty("user.dir"));
 	public File []file = new File[2];
-	private File sol_file ;
+	private File []sol_file ;
 	private JLabel jLabel1 = null;
 	private JButton JSSP = null;
 	private JLabel jLabel2 = null;
@@ -43,7 +43,7 @@ public class FJSSP extends JFrame {
 	private JLabel Epsilon = null;
 	private JLabel Iterations = null;
 	private JTextField Cycles = null;	
-	public Logic.QLearning ql;
+	public Logic.QLearning ql,ql2;
 	
 //	private JButton Draw = null;
 	private JPanel jContentPane1 = null;
@@ -137,16 +137,65 @@ public class FJSSP extends JFrame {
 			panel.add(getJSSP(), null);
 			
 			JButton btnLoadSchedule = new JButton("Load Schedule");
+			FileNameExtensionFilter filter = new FileNameExtensionFilter("DZN and TXT files", "dzn","txt");
+			FileChooserLoad.setFileFilter(filter);
+			FileChooserLoad.setMultiSelectionEnabled(true);
 			btnLoadSchedule.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
 					//open the text file with the schedule
 					int returnVal = FileChooserLoad.showOpenDialog(null);
 					//FileChooser.setBorder(new LineBorder(Color.BLUE));
 					if (returnVal == JFileChooser.APPROVE_OPTION) {
-		                sol_file = FileChooserLoad.getSelectedFile();
-		                //System.out.println("fichero seleccionado " + sol_file.getName());
+		                sol_file = FileChooserLoad.getSelectedFiles();
 		                try {
-							Test test = new Test(sol_file);
+			                if (sol_file.length == 1) {
+			                	Test test = new Test(sol_file[0]);
+							}else if (sol_file.length == 3) {
+								File temp[] = new File[2];
+								File temp2 = null;
+								boolean correct = true;
+								for (int i = 0; i < 3; i++) {
+									BufferedReader file = new BufferedReader(new FileReader(sol_file[i]));
+									 String s = file.readLine();
+									 System.out.println("fichero "+ sol_file[i].getName()+" linea "+s.toString()+" ooo "+s.charAt(0));
+									 
+									 if (s.charAt(0)=='%') {
+										temp[0] = sol_file[i];
+									}else if(s.charAt(0)=='a')
+										temp[1] = sol_file[i];
+									else if(Character.isDigit(s.charAt(0))) {
+										temp2 = sol_file[i];										
+									}else {
+										correct = false;
+										JOptionPane.showMessageDialog(FJSSP.this, "One of more files are not correct", "ERROR", JOptionPane.ERROR_MESSAGE);
+									}
+									 file.close();
+								}
+								 if (correct) {
+									//leer otros datos
+										double LR = Double.parseDouble(alpha.getText());
+										double DF = Double.parseDouble(gamma.getText());
+										double epsi = Double.parseDouble(epsilon.getText());
+										int cycles = Integer.parseInt(Cycles.getText());
+										
+										ql2 = new QLearning(temp, LR, DF, cycles, epsi);
+										ql2.ReadData(temp);	
+										
+										//graficar
+										 new Test(temp2,ql2); 
+								}
+								
+								/*try {
+									ql.Execute(LR, DF);
+								} catch (CloneNotSupportedException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}*/
+								
+							}
+			                //System.out.println("fichero seleccionado " + sol_file.getName());
+		               
+							
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();

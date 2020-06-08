@@ -18,6 +18,8 @@ public class Machine implements Cloneable{
 	public int initial_time_machine = 0;
 	public int end_time_machine = 0;
 	
+	public int timeReSchedule = -1;
+	
 	//amount of work so far
 	public int work=0;
 	

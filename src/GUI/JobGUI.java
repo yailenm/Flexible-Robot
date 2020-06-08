@@ -13,7 +13,7 @@ public class JobGUI {
 		this.processingTimes = processingTimes;
 		this.operations = new OperationGUI[n_op];
 		for (int i = 0; i < n_op; i++) {
-				operations[i] = new OperationGUI(i, id, 0, 0,null,-1);			
+				operations[i] = new OperationGUI(i, id, 0, 0,null,-1,-1);			
 		}
 	}
 	
@@ -54,7 +54,7 @@ public class JobGUI {
 		this.operations = new OperationGUI[stagesVisited.length];
 		for (int i = 0; i < stagesVisited.length; i++) {
 //			if (isStageVisited(i)) {
-				operations[i] = new OperationGUI(i, id, 0, 0,null,-1);
+				operations[i] = new OperationGUI(i, id, 0, 0,null,-1,-1);
 //			}  
 		}
 	}

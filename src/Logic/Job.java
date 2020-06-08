@@ -15,6 +15,9 @@ public class Job implements Cloneable{
 	public int temp_endtime;
 	public int aux_end = 0;	
 	
+	//public int limitOpFix = 0;
+	public int opStart = -1; // operation para empezar el re-schedule
+	
 	public Job(int i){
 		ID = i;
 		
@@ -57,6 +60,11 @@ public class Job implements Cloneable{
 		//chequear que haya una proxima!!!
 		machs[operations.get(index+1).Ma].Queue.add(operations.get(index+1));
 		//System.out.println("End time of the job "+ ID +" so far " + j_end_time);
+	}
+
+	public void startReChedule(Machine[] machines) {
+		machines[operations.get(opStart).Ma].Queue.add(operations.get(opStart));
+		
 	}
 	
 }

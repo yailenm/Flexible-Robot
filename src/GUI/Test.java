@@ -7,6 +7,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import Logic.QLearning;
+
 
 /**
  * This class visualizes the Gantt chart of a given schedule(solution file) without executing an algorithm
@@ -17,7 +19,7 @@ import java.util.ArrayList;
 
 public class Test {
 
-	public static Pair<Instance,Schedule> loadSchedule(Instance instance) throws IOException {
+	public static Pair<Instance,Schedule> loadSchedule(Instance instance, QLearning ql) throws IOException {
         //BufferedReader file = new BufferedReader(new FileReader(instance.SolFile));
         
         BufferedReader file = new BufferedReader(new FileReader(instance.loadedFile));
@@ -45,11 +47,16 @@ public class Test {
             int start = Integer.valueOf(numbers[4]);
             int end = Integer.valueOf(numbers[5]);
             int backToBackBefore = Integer.valueOf(numbers[6]);
-            int slack = Integer.valueOf(numbers[7]);
-            
+            int operation_precedent = Integer.valueOf(numbers[7]);
+            int slack = Integer.valueOf(numbers[8]);
+            if (ql != null) {
+				ql.Jobs[jobId].operations.get(opId).initial_time = start;
+				ql.Jobs[jobId].operations.get(opId).end_time = end;
+				
+			}
             //Create Operation and Machine, and add it with start and end time
             JobGUI J = new JobGUI(jobId);
-            OperationGUI O = new OperationGUI(opId, jobId, start, end, opName,backToBackBefore);
+            OperationGUI O = new OperationGUI(opId, jobId, start, end, opName,backToBackBefore,operation_precedent);
             O.Mjob = J;
             O.setSlack(slack);
             if (instance.machines[machineId] == null){
@@ -83,8 +90,18 @@ public class Test {
 		Instance instance = new Instance("Schedule", 50, file);
 		
 		//Instance instance = new Instance("Schedule", 50, file.getName(), 3);
-		Pair<Instance,Schedule> result = loadSchedule(instance);
-		 ScheduleFrame sf = new ScheduleFrame(result.getFirst(), result.getSecond(), "Test");
+		Pair<Instance,Schedule> result = loadSchedule(instance,null);
+		 ScheduleFrame sf = new ScheduleFrame(result.getFirst(), result.getSecond(), "Test",null);
+		 sf.setVisible(true);
+	}
+	
+	public Test(File file,QLearning ql) throws IOException {
+		//Instance instance = new Instance("Schedule", 50, "Solutions/Mine/Solution-Constraints.dzn.txt");
+		Instance instance = new Instance("Schedule", 50, file);
+		
+		//Instance instance = new Instance("Schedule", 50, file.getName(), 3);
+		Pair<Instance,Schedule> result = loadSchedule(instance,ql);
+		 ScheduleFrame sf = new ScheduleFrame(result.getFirst(), result.getSecond(), "Test",ql);
 		 sf.setVisible(true);
 	}
    
